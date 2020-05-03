@@ -36,7 +36,7 @@ public class NfcModel {
                 this.techLists[i] = new String[]{factories[i].getTagTechnology().getName()};
             }
             try {
-                this.filters = new IntentFilter[]{new IntentFilter("android.nfc.action.TECH_DISCOVERED", "*/*")};
+                this.filters = new IntentFilter[]{new IntentFilter(NfcAdapter.ACTION_TECH_DISCOVERED, "*/*")};
             } catch (IntentFilter.MalformedMimeTypeException e) {
                 throw new RuntimeException(e);
             }
@@ -57,7 +57,7 @@ public class NfcModel {
 
     public boolean onNewIntent(Intent intent) {
         try {
-            Parcelable p = intent.getParcelableExtra("android.nfc.extra.TAG");
+            Parcelable p = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
             if (p != null && p instanceof Tag) {
                 this.intent = intent;
                 return this.load(p);

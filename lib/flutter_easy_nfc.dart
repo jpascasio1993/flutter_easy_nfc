@@ -8,12 +8,12 @@ import "package:hex/hex.dart";
 
 class NfcError extends Error {
   final String code;
-
-  NfcError({this.code});
+  final String message;
+  NfcError({this.code, this.message});
 
   @override
   String toString() {
-    return "NfcError: ${code} ";
+    return "NfcError: ${code} :: ${message} ";
   }
 }
 
@@ -69,7 +69,7 @@ class IsoDep extends BasicTagTechnology {
 
 dynamic handle(dynamic res) {
   if (res['code'] != null) {
-    throw new NfcError(code: res['code']);
+    throw new NfcError(code: res['code'], message: res['message']);
   }
   return res['data'];
 }
@@ -86,6 +86,10 @@ class MifareClassic extends BasicTagTechnology {
   Future<bool> authenticateSectorWithKeyB(int sectorIndex, dynamic key) async {
     return handle(await _channel.invokeMethod("authenticateSectorWithKeyB",
         {'sectorIndex': sectorIndex, 'key': getRequest(key)}));
+  }
+
+  Future<int> sectorToBlock(int sectorIndex) async {
+    return handle(await _channel.invokeMethod("sectorToBlock", { 'sectorIndex': sectorIndex }));
   }
 
   Future<Uint8List> readBlock(int block) async {
@@ -121,6 +125,10 @@ class MifareClassic extends BasicTagTechnology {
   Future decrement(int block, int value) async {
     return handle(await _channel
         .invokeMethod("decrement", {'block': block, 'value': value}));
+  }
+
+  Future<bool> setTimeout(int timeout) async {
+    return handle(await _channel.invokeMethod("setTimeout", { 'timeout': timeout }));
   }
 }
 
