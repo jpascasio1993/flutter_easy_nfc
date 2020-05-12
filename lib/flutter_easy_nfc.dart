@@ -27,8 +27,9 @@ typedef void OnNfcEvent(NfcEvent event);
 
 class BasicTagTechnology {
   MethodChannel _channel;
+  Map<String, dynamic> _info;
 
-  BasicTagTechnology(MethodChannel channel) : _channel = channel;
+  BasicTagTechnology({MethodChannel channel, Map<String, dynamic> info}) : _channel = channel, _info =info;
 
   //// Base
   Future connect() async {
@@ -38,6 +39,8 @@ class BasicTagTechnology {
   Future close() async {
     await handle(await _channel.invokeMethod('close'));
   }
+
+  Map<String, dynamic> get extraInfo => _info;
 }
 
 Uint8List getRequest(dynamic data) {
@@ -57,7 +60,7 @@ Uint8List getRequest(dynamic data) {
 }
 
 class IsoDep extends BasicTagTechnology {
-  IsoDep(MethodChannel channel) : super(channel);
+  IsoDep({MethodChannel channel, Map<String, dynamic> info}) : super(channel: channel, info: info);
 
   //// data : String/Uint8List/List
   Future<Uint8List> transceive(dynamic data) async {
@@ -75,7 +78,7 @@ dynamic handle(dynamic res) {
 }
 
 class MifareClassic extends BasicTagTechnology {
-  MifareClassic(MethodChannel channel) : super(channel);
+  MifareClassic({MethodChannel channel, Map<String, dynamic> info}) : super(channel: channel, info: info);
 
   /// For MifareClassic
   Future<bool> authenticateSectorWithKeyA(int sectorIndex, dynamic key) async {
@@ -132,17 +135,21 @@ class MifareClassic extends BasicTagTechnology {
   }
 }
 
-class AppLifecycleStateObserver extends WidgetsBindingObserver {
+class AppLifecycleStateObserver with WidgetsBindingObserver {
   MethodChannel _channel;
-  AppLifecycleStateObserver(MethodChannel channel) : _channel = channel {
-    WidgetsBinding.instance.addObserver(this);
-  }
+  AppLifecycleStateObserver(MethodChannel channel) : _channel = channel;
+//  {
+//    WidgetsBinding.instance.addObserver(this);
+//  }
 
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (FlutterEasyNfc._isStartup) {
+    if (FlutterEasyNfc._isStartup){
+      print('state $state');
       if (state == AppLifecycleState.resumed) {
+        print('resumed');
         _channel.invokeMethod("resume");
       } else if (state == AppLifecycleState.paused) {
+        print('paused');
         _channel.invokeMethod("pause");
       }
     }
@@ -168,9 +175,12 @@ class FlutterEasyNfc {
   static AppLifecycleStateObserver _observer =
       new AppLifecycleStateObserver(_channel);
 
+  static  AppLifecycleStateObserver get observer => _observer;
+
   static void onNfcEvent(OnNfcEvent event) {
     _event = event;
   }
+
 
   static Future sendStr() {
     return _channel.invokeMethod("sendStr", "00a40000023f00");
@@ -218,17 +228,17 @@ class FlutterEasyNfc {
 
   static Future handler(MethodCall call) {
     String name = call.method;
-    var data = call.arguments;
+    final data = call.arguments;
     switch (name) {
       case "nfc":
-        print(data);
+//        print(data);
         if (_event != null) {
           String tech = data['tech'];
           NfcEvent event;
           if (tech == 'IsoDep') {
-            event = new NfcEvent(new IsoDep(_channel));
-          } else if (tech == "MifareClassic") {
-            event = new NfcEvent(new MifareClassic(_channel));
+            event = new NfcEvent(new IsoDep(channel: _channel, info: { 'tech': data['tech'], 'id': data['id'] }));
+          } else if (tech == "MifareClassic"){
+            event = new NfcEvent(new MifareClassic(channel: _channel, info:  { 'tech': data['tech'], 'id': data['id'] }));
           }
           _event(event);
         }

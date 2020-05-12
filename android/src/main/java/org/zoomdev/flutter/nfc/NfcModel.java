@@ -21,7 +21,7 @@ public class NfcModel {
     private NfcAdapterListener adapterListener;
     private NfcTagAdapter adapter;
     NfcTagAdapter.TagAdapterFactory[] factories;
-
+    private boolean isResumed = true;
 
     public <T extends NfcTagAdapter> T getAdapter() {
         return (T) adapter;
@@ -108,14 +108,16 @@ public class NfcModel {
     }
 
     public void onResume(Activity context) {
-        if (this.nfcAdapter != null) {
+        if (this.nfcAdapter != null && isResumed) {
+            isResumed = false;
             this.nfcAdapter.enableForegroundDispatch(context, this.pendingIntent, this.filters, this.techLists);
         }
 
     }
 
     public void onPause(Activity context) {
-        if (this.nfcAdapter != null) {
+        if (this.nfcAdapter != null && !isResumed) {
+            isResumed = true;
             this.nfcAdapter.disableForegroundDispatch(context);
         }
     }

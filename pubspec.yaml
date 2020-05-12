@@ -5,7 +5,7 @@ author: JZoom<jzoom8112@gmail.com>
 homepage: https://github.com/best-flutter/flutter_easy_nfc
 
 environment:
-  sdk: ">=2.0.0-dev.68.0 <3.0.0"
+  sdk: ">=2.6.0 <3.0.0"
 
 dependencies:
   flutter:
