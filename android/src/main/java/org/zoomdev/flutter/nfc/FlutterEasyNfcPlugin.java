@@ -7,6 +7,7 @@ import android.nfc.TagLostException;
 import android.nfc.tech.IsoDep;
 import android.nfc.tech.MifareClassic;
 import android.nfc.tech.TagTechnology;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
@@ -196,7 +197,7 @@ public class FlutterEasyNfcPlugin implements MethodCallHandler, NfcAdapterListen
             int timeout = (int) map.get("timeout");
             setTimeout(timeout, result);
         } else if("mifareBlockSize".equals(method)) {
-            result.success(mifareClassicBlockSize());
+            getBlockSize(result);
         }
         else {
             result.notImplemented();
@@ -453,11 +454,6 @@ public class FlutterEasyNfcPlugin implements MethodCallHandler, NfcAdapterListen
         }
     }
 
-    public synchronized int mifareClassicBlockSize() {
-        return MifareClassic.BLOCK_SIZE;
-    }
-
-
     public void readBlock(final int block, Result result) {
         synchronized (this) {
             new MifareClassicNfcExecutor() {
@@ -472,6 +468,16 @@ public class FlutterEasyNfcPlugin implements MethodCallHandler, NfcAdapterListen
         }
     }
 
+    public void getBlockSize(Result result) {
+        synchronized (this) {
+            new MifareClassicNfcExecutor() {
+                @Override
+                Object execute(MifareClassic tag) {
+                    return MifareClassic.BLOCK_SIZE;
+                }
+            }.handle(result);
+        }
+    }
     public void getBlockCount(Result result) {
         synchronized (this) {
             new MifareClassicNfcExecutor() {

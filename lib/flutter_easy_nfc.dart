@@ -91,6 +91,14 @@ class MifareClassic extends BasicTagTechnology {
         {'sectorIndex': sectorIndex, 'key': getRequest(key)}));
   }
 
+  Future<int> blockCount() async {
+    return handle(await _channel.invokeMethod('getBlockCount'));
+  }
+
+  Future<int> blockSize() async {
+    return handle(await _channel.invokeMethod('mifareBlockSize'));
+  }
+
   Future<int> sectorToBlock(int sectorIndex) async {
     return handle(await _channel.invokeMethod("sectorToBlock", { 'sectorIndex': sectorIndex }));
   }
@@ -223,9 +231,8 @@ class FlutterEasyNfc {
     _isStartup = false;
   }
 
-  static Future<int> mifareClassicBlockSize() {
-    return _channel.invokeMethod('mifareBlockSize');
-  }
+
+
 
   static Future handler(MethodCall call) {
     String name = call.method;
