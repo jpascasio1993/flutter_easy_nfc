@@ -47,7 +47,7 @@ Uint8List getRequest(dynamic data) {
   var req;
   if (data is String) {
     req = HEX.decode(data);
-  } else if (data is List) {
+  } else if (data is List<int>) {
     if (data is Uint8List) {
       req = data;
     } else {
@@ -135,21 +135,17 @@ class MifareClassic extends BasicTagTechnology {
   }
 }
 
-class AppLifecycleStateObserver with WidgetsBindingObserver {
+class AppLifecycleStateObserver extends WidgetsBindingObserver {
   MethodChannel _channel;
-  AppLifecycleStateObserver(MethodChannel channel) : _channel = channel;
-//  {
-//    WidgetsBinding.instance.addObserver(this);
-//  }
+  AppLifecycleStateObserver(MethodChannel channel) : _channel = channel {
+    WidgetsBinding.instance.addObserver(this);
+  }
 
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (FlutterEasyNfc._isStartup){
-      print('state $state');
+    if (FlutterEasyNfc._isStartup) {
       if (state == AppLifecycleState.resumed) {
-        print('resumed');
         _channel.invokeMethod("resume");
       } else if (state == AppLifecycleState.paused) {
-        print('paused');
         _channel.invokeMethod("pause");
       }
     }
@@ -162,7 +158,11 @@ class FlutterEasyNfc {
   static const String NOT_INITIALIZED = "3";
   static const String IO = "4";
   static const String IN_CORRECT_METHOD = "5";
-  static const String PARAM_ERROR = "6";
+  static const String PARAM_ERROR = "0";
+  static const String TAG_LOST = "6";
+  static const String COMMON_ERROR = "9";
+  static const String MIFARE_INVALID_BLOC = "7";
+  static const String MIFARE_INVALID_SECTOR = "8";
 
   static const MethodChannel _channel = const MethodChannel('flutter_easy_nfc');
 
@@ -173,14 +173,11 @@ class FlutterEasyNfc {
   static bool _isStartup = false;
 
   static AppLifecycleStateObserver _observer =
-      new AppLifecycleStateObserver(_channel);
-
-  static  AppLifecycleStateObserver get observer => _observer;
+  new AppLifecycleStateObserver(_channel);
 
   static void onNfcEvent(OnNfcEvent event) {
     _event = event;
   }
-
 
   static Future sendStr() {
     return _channel.invokeMethod("sendStr", "00a40000023f00");
@@ -226,12 +223,16 @@ class FlutterEasyNfc {
     _isStartup = false;
   }
 
+  static Future<int> mifareClassicBlockSize() {
+    return _channel.invokeMethod('mifareBlockSize');
+  }
+
   static Future handler(MethodCall call) {
     String name = call.method;
     final data = call.arguments;
     switch (name) {
       case "nfc":
-//        print(data);
+        print(data);
         if (_event != null) {
           String tech = data['tech'];
           NfcEvent event;
